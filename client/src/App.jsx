@@ -395,7 +395,7 @@ export default function App() {
 
           <p style={{ fontWeight: 500 }}>© {new Date().getFullYear()} JK Construction, Jabalpur (M.P.). All Rights Reserved.</p>
           <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px', maxWidth: '600px', lineHeight: '1.5' }}>
-            Office Address: Plot No-236, Rajul City , Mandala-Jabalpur Road , Phase-1 Bilhari , Jabalpur , MP-482020 | Founder: Shri Jinesh Kumar Mehra | Call: +91-7692931715
+            Office Address: Plot No-236, Rajul City , Mandala-Jabalpur Road , Phase-1 Bilhari , Jabalpur , MP-482020 | Founder: Shri Jinesh Kumar Mehra | Call: <a href="tel:+917692931715" className="communication-link" style={{ color: 'var(--accent-color)', fontWeight: 600 }}>+91-7692931715</a>
           </p>
         </div>
       </footer>

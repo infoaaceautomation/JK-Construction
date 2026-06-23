@@ -90,6 +90,20 @@ export default function AIChatbot({ backendUrl }) {
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Hello%20JK%20Construction%2C%20I%20have%20an%20enquiry%20regarding%20construction%2Fdesigning%20services.`;
   const callUrl = `tel:${displayPhoneNumber}`;
 
+  const renderMessageText = (text) => {
+    if (text.includes('+91-7692931715')) {
+      const parts = text.split('+91-7692931715');
+      return (
+        <>
+          {parts[0]}
+          <a href="tel:+917692931715" className="communication-link" style={{ color: 'var(--accent-color)', fontWeight: 600 }}>+91-7692931715</a>
+          {parts[1]}
+        </>
+      );
+    }
+    return text;
+  };
+
   return (
     <>
       {/* FLOATING ACTION BUTTONS CONTAINER */}
@@ -222,7 +236,7 @@ export default function AIChatbot({ backendUrl }) {
                   lineHeight: '1.5',
                   boxShadow: '0 2px 8px var(--shadow-color)'
                 }}>
-                  {m.text}
+                  {renderMessageText(m.text)}
                 </div>
                 <span style={{
                   fontSize: '9px',

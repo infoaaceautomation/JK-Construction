@@ -931,7 +931,7 @@ export default function AdminDashboard({ backendUrl }) {
                     </div>
 
                     <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                      <b>Phone:</b> {enq.phone} {enq.email && <span> | <b>Email:</b> {enq.email}</span>}
+                      <b>Phone:</b> <a href={`tel:${enq.phone}`} className="communication-link" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{enq.phone}</a> {enq.email && <span> | <b>Email:</b> <a href={`mailto:${enq.email}`} className="communication-link" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{enq.email}</a></span>}
                     </div>
 
                     <div style={{

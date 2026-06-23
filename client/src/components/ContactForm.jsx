@@ -102,12 +102,16 @@ export default function ContactForm({ backendUrl }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <div style={{ color: 'var(--accent-color)', background: 'var(--navy-blue)', padding: '8px', borderRadius: '8px', display: 'flex' }}><Phone size={18} /></div>
-                  <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>+91-7692931715</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600 }}>
+                    <a href="tel:+917692931715" className="communication-link" style={{ color: 'var(--text-primary)' }}>+91-7692931715</a>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <div style={{ color: 'var(--accent-color)', background: 'var(--navy-blue)', padding: '8px', borderRadius: '8px', display: 'flex' }}><Mail size={18} /></div>
-                  <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>jkc@jkconstructionjbp.com</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600 }}>
+                    <a href="mailto:jkc@jkconstructionjbp.com" className="communication-link" style={{ color: 'var(--text-primary)' }}>jkc@jkconstructionjbp.com</a>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

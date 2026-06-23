@@ -248,3 +248,14 @@ input:focus, select:focus, textarea:focus {
   transform: scale(1.12) translateY(-4px);
   filter: drop-shadow(0 0 28px rgba(234, 179, 8, 1)) drop-shadow(0 8px 20px rgba(234, 179, 8, 0.5));
 }
+
+/* Communication Links */
+.communication-link {
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.communication-link:hover {
+  color: var(--accent-color) !important;
+  text-decoration: underline !important;
+}
