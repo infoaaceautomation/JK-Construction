@@ -57,7 +57,7 @@ export default function FounderSection() {
                 {!imgError ? (
                   <img
                     src="/founder.jpg"
-                    alt="Shri Jinesh Kumar Mehra"
+                    alt="Architect Jinesh Kumar Mehra"
                     onError={() => setImgError(true)}
                     style={{
                       width: '100%',
@@ -95,7 +95,7 @@ export default function FounderSection() {
                       JKM
                     </div>
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: '18px', marginBottom: '4px' }}>Shri Jinesh Kumar Mehra</h4>
+                      <h4 style={{ color: '#fff', fontSize: '18px', marginBottom: '4px' }}>Architect Jinesh Kumar Mehra</h4>
                       <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>[ Place founder.png in client/public folder ]</p>
                     </div>
                   </div>
@@ -127,7 +127,7 @@ export default function FounderSection() {
                     Founder & MD
                   </span>
                   <h3 style={{ color: '#ffffff', fontSize: '20px', fontWeight: '700', margin: 0 }}>
-                    Shri Jinesh Kumar Mehra
+                    Architect Jinesh Kumar Mehra
                   </h3>
                   <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', margin: 0 }}>
                     JK Construction (Jabalpur)
@@ -196,7 +196,7 @@ export default function FounderSection() {
                   color: 'var(--text-primary)',
                   letterSpacing: '0.5px'
                 }}>
-                  Shri Jinesh Kumar Mehra
+                  Architect Jinesh Kumar Mehra
                 </span>
                 <span style={{
                   fontSize: '12px',

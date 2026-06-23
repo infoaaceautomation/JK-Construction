@@ -89,7 +89,7 @@ export default function ContactForm({ backendUrl }) {
                 About JK Construction
               </h3>
               <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-                Founded in 2010 by <b>Shri Jinesh Kumar Mehra</b>, JK Construction is Jabalpur's premier engineering design, elevation map, and civil contracting partner. We manage residential bungalows, duplex units, retail malls, and office interiors with a firm commit to timely delivery, quality materials, and transparent transaction policies.
+                Founded in 2010 by <b>Architect Jinesh Kumar Mehra</b>, JK Construction is Jabalpur's premier engineering design, elevation map, and civil contracting partner. We manage residential bungalows, duplex units, retail malls, and office interiors with a firm commit to timely delivery, quality materials, and transparent transaction policies.
               </p>
             </div>
 
@@ -218,7 +218,7 @@ export default function ContactForm({ backendUrl }) {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Shri Jinesh Kumar"
+                  placeholder="Architect Jinesh Kumar"
                   required
                 />
               </div>
