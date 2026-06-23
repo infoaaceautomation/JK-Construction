@@ -11,7 +11,7 @@ import AIChatbot from './components/AIChatbot';
 import Reviews from './components/Reviews';
 import { ArrowRight, ChevronRight, HardHat, ShieldCheck, Clock, Award, Facebook, Youtube, Instagram, Linkedin, Twitter } from 'lucide-react';
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin;
 
 export default function App() {
   const [theme, setTheme] = useState(localStorage.getItem('jkc_theme') || 'light');

@@ -365,6 +365,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
+// Serve static files from the React frontend build
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch-all handler to serve React frontend for non-API routes
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
