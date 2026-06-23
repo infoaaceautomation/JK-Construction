@@ -1,0 +1,25 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.*
+
+# Build outputs
+dist/
+**/dist/
+
+# SQLite databases
+*.sqlite
+*.db
+**/database.sqlite
+
+# OS generated files
+.DS_Store
+Thumbs.db
