@@ -1,0 +1,6 @@
+{
+  "ignore": [
+    "database.sqlite",
+    "node_modules"
+  ]
+}

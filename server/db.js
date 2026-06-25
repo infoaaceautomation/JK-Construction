@@ -99,6 +99,29 @@ function initDatabase() {
         }
       });
     });
+
+    // Gallery Table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS gallery (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        media_url TEXT NOT NULL,
+        media_type TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `, () => {
+      // Seed gallery if empty
+      db.get('SELECT COUNT(*) as count FROM gallery', [], (err, row) => {
+        if (err) {
+          console.error('Error checking gallery count:', err.message);
+          return;
+        }
+        if (row.count === 0) {
+          seedGallery();
+        }
+      });
+    });
   });
 }
 
@@ -207,6 +230,48 @@ function seedReviews() {
 
   stmt.finalize(() => {
     console.log('Successfully seeded database with initial reviews.');
+  });
+}
+
+function seedGallery() {
+  const initialGallery = [
+    {
+      title: 'Modern House Facade Elevation',
+      description: 'Ultra-modern elevation design for a duplex house constructed in Dhanvantri Nagar, Jabalpur.',
+      media_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800',
+      media_type: 'image'
+    },
+    {
+      title: 'Luxury Villa Living Room',
+      description: 'Elegant wooden wall panels, warm ambient lighting, and bespoke ceiling design completed in Civic Center.',
+      media_url: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=800',
+      media_type: 'image'
+    },
+    {
+      title: 'Site Excavation & Construction',
+      description: 'Excavation machinery working on the site foundations in Vijay Nagar, Jabalpur.',
+      media_url: 'https://assets.mixkit.co/videos/preview/mixkit-digger-working-on-a-construction-site-41584-large.mp4',
+      media_type: 'video'
+    },
+    {
+      title: 'Premium Modular Kitchen',
+      description: 'Glossy acrylic modular kitchen cabinets with modern built-in appliances and LED backlighting.',
+      media_url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&q=80&w=800',
+      media_type: 'image'
+    }
+  ];
+
+  const stmt = db.prepare(`
+    INSERT INTO gallery (title, description, media_url, media_type)
+    VALUES (?, ?, ?, ?)
+  `);
+
+  initialGallery.forEach((item) => {
+    stmt.run(item.title, item.description || null, item.media_url, item.media_type);
+  });
+
+  stmt.finalize(() => {
+    console.log('Successfully seeded database with initial gallery items.');
   });
 }
 

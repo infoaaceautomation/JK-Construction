@@ -9,6 +9,7 @@ import AdminDashboard from './components/AdminDashboard';
 import ThreeCanvas from './components/ThreeCanvas';
 import AIChatbot from './components/AIChatbot';
 import Reviews from './components/Reviews';
+import Gallery from './components/Gallery';
 import { ArrowRight, ChevronRight, HardHat, ShieldCheck, Clock, Award, Facebook, Youtube, Instagram, Linkedin, Twitter } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin;
@@ -310,6 +311,12 @@ export default function App() {
       {currentTab === 'projects' && (
         <main style={{ flexGrow: 1 }}>
           <Projects backendUrl={BACKEND_URL} />
+        </main>
+      )}
+
+      {currentTab === 'gallery' && (
+        <main style={{ flexGrow: 1 }}>
+          <Gallery backendUrl={BACKEND_URL} />
         </main>
       )}
 

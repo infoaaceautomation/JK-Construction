@@ -10,8 +10,8 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'jk_construction_super_secret_key_123';
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Auth Middleware
 function authenticateToken(req, res, next) {
@@ -40,6 +40,16 @@ app.get('/api/projects', async (req, res) => {
     res.json(projects);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch projects' });
+  }
+});
+
+// Get gallery items
+app.get('/api/gallery', async (req, res) => {
+  try {
+    const items = await db.all('SELECT * FROM gallery ORDER BY created_at DESC');
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch gallery items' });
   }
 });
 
@@ -157,6 +167,50 @@ app.delete('/api/admin/projects/:id', authenticateToken, async (req, res) => {
     res.json({ message: 'Project deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
+// Create new gallery item (supports single or bulk batch upload)
+app.post('/api/admin/gallery', authenticateToken, async (req, res) => {
+  const items = Array.isArray(req.body) ? req.body : [req.body];
+
+  if (items.length === 0) {
+    return res.status(400).json({ error: 'No items provided' });
+  }
+
+  // Validate all items
+  for (const item of items) {
+    if (!item.title || !item.media_url || !item.media_type) {
+      return res.status(400).json({ error: 'Title, media URL, and media type are required for all items' });
+    }
+  }
+
+  try {
+    const ids = [];
+    for (const item of items) {
+      const result = await db.run(
+        `INSERT INTO gallery (title, description, media_url, media_type)
+         VALUES (?, ?, ?, ?)`,
+        [item.title, item.description || null, item.media_url, item.media_type]
+      );
+      ids.push(result.id);
+    }
+    res.status(201).json({ message: 'Gallery item(s) added successfully', ids });
+  } catch (err) {
+    console.error('Error adding gallery item(s):', err);
+    res.status(500).json({ error: err.message || 'Failed to add gallery item(s)' });
+  }
+});
+
+
+// Delete gallery item
+app.delete('/api/admin/gallery/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.run('DELETE FROM gallery WHERE id = ?', [id]);
+    res.json({ message: 'Gallery item deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete gallery item' });
   }
 });
 

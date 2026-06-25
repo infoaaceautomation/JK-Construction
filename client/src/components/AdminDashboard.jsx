@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, Calendar, Plus, Trash2, CheckCircle2, User, KeyRound, Save, BarChart2, Users, ClipboardList, TrendingUp, CheckSquare, Briefcase, FileText, Activity, Download, Edit2, Star } from 'lucide-react';
+import { LogOut, Calendar, Plus, Trash2, CheckCircle2, User, KeyRound, Save, BarChart2, Users, ClipboardList, TrendingUp, CheckSquare, Briefcase, FileText, Activity, Download, Edit2, Star, AlertTriangle } from 'lucide-react';
 
 export default function AdminDashboard({ backendUrl }) {
   const [token, setToken] = useState(localStorage.getItem('jkc_admin_token') || '');
@@ -15,6 +15,10 @@ export default function AdminDashboard({ backendUrl }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dashboardMessage, setDashboardMessage] = useState({ type: '', text: '' });
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState([]);
+
+
 
   // Add Project fields
   const [newProject, setNewProject] = useState({
@@ -42,6 +46,16 @@ export default function AdminDashboard({ backendUrl }) {
     source: 'Google'
   });
 
+  // Gallery state variables
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [newGalleryItem, setNewGalleryItem] = useState({
+    title: '',
+    description: '',
+    media_url: '',
+    media_type: 'image'
+  });
+  const [galleryImageSourceType, setGalleryImageSourceType] = useState('url');
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -63,6 +77,7 @@ export default function AdminDashboard({ backendUrl }) {
       fetchEnquiries();
       fetchProjects();
       fetchReviews();
+      fetchGalleryItems();
     }
   }, [token]);
 
@@ -144,6 +159,13 @@ export default function AdminDashboard({ backendUrl }) {
       .catch((err) => console.error('Reviews fetch error:', err));
   };
 
+  const fetchGalleryItems = () => {
+    fetch(`${backendUrl || 'http://localhost:5000'}/api/gallery`)
+      .then((res) => res.json())
+      .then((data) => setGalleryItems(data))
+      .catch((err) => console.error('Gallery items fetch error:', err));
+  };
+
   const handleAddReview = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -185,33 +207,38 @@ export default function AdminDashboard({ backendUrl }) {
   };
 
   const handleDeleteReview = (id) => {
-    if (!window.confirm('Are you sure you want to delete this review?')) return;
-
-    fetch(`${backendUrl || 'http://localhost:5000'}/api/admin/reviews/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Deletion failed');
-        return res.json();
-      })
-      .then(() => {
-        showMsg('success', 'Review deleted successfully!');
-        fetchReviews();
-        if (editingReviewId === id) {
-          setEditingReviewId(null);
-          setReviewFields({
-            author_name: '',
-            author_photo_url: '',
-            rating: 5,
-            relative_time_description: 'a week ago',
-            text: '',
-            source: 'Google'
-          });
-        }
-      })
-      .catch((err) => showMsg('error', err.message));
+    requestConfirm(
+      'Delete Review',
+      'Are you sure you want to permanently delete this Google review?',
+      () => {
+        fetch(`${backendUrl || 'http://localhost:5000'}/api/admin/reviews/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Deletion failed');
+            return res.json();
+          })
+          .then(() => {
+            showMsg('success', 'Review deleted successfully!');
+            fetchReviews();
+            if (editingReviewId === id) {
+              setEditingReviewId(null);
+              setReviewFields({
+                author_name: '',
+                author_photo_url: '',
+                rating: 5,
+                relative_time_description: 'a week ago',
+                text: '',
+                source: 'Google'
+              });
+            }
+          })
+          .catch((err) => showMsg('error', err.message));
+      }
+    );
   };
+
 
   const handleEditReviewSelect = (review) => {
     setEditingReviewId(review.id);
@@ -285,45 +312,194 @@ export default function AdminDashboard({ backendUrl }) {
   };
 
   const handleDeleteProject = (id) => {
-    if (!window.confirm('Are you sure you want to delete this project?')) return;
+    requestConfirm(
+      'Delete Project',
+      'Are you sure you want to permanently delete this project from your portfolio?',
+      () => {
+        fetch(`${backendUrl || 'http://localhost:5000'}/api/admin/projects/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Deletion failed');
+            return res.json();
+          })
+          .then(() => {
+            showMsg('success', 'Project deleted!');
+            fetchProjects();
+          })
+          .catch((err) => showMsg('error', err.message));
+      }
+    );
+  };
 
-    fetch(`${backendUrl || 'http://localhost:5000'}/api/admin/projects/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
+
+  const handleAddGalleryItem = (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    let payload = [];
+
+    if (galleryImageSourceType === 'url') {
+      if (!newGalleryItem.media_url) {
+        showMsg('error', 'Please provide a media URL.');
+        setLoading(false);
+        return;
+      }
+      payload = {
+        title: newGalleryItem.title || 'Untitled Gallery Item',
+        description: newGalleryItem.description || '',
+        media_url: newGalleryItem.media_url,
+        media_type: newGalleryItem.media_type
+      };
+    } else {
+      if (selectedGalleryFiles.length === 0) {
+        showMsg('error', 'Please select at least one file to upload.');
+        setLoading(false);
+        return;
+      }
+      payload = selectedGalleryFiles.map((item, index) => {
+        const baseTitle = newGalleryItem.title || item.name.replace(/\.[^/.]+$/, "");
+        const title = selectedGalleryFiles.length > 1 && newGalleryItem.title 
+          ? `${baseTitle} - ${index + 1}` 
+          : baseTitle;
+        return {
+          title,
+          description: newGalleryItem.description || '',
+          media_url: item.media_url,
+          media_type: item.media_type
+        };
+      });
+    }
+
+    fetch(`${backendUrl || 'http://localhost:5000'}/api/admin/gallery`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
     })
       .then((res) => {
-        if (!res.ok) throw new Error('Deletion failed');
+        if (!res.ok) throw new Error('Failed to create gallery item(s)');
         return res.json();
       })
       .then(() => {
-        showMsg('success', 'Project deleted!');
-        fetchProjects();
+        showMsg('success', 'Gallery item(s) created successfully!');
+        setNewGalleryItem({
+          title: '',
+          description: '',
+          media_url: '',
+          media_type: 'image'
+        });
+        setSelectedGalleryFiles([]);
+        setGalleryImageSourceType('url');
+        fetchGalleryItems();
       })
-      .catch((err) => showMsg('error', err.message));
+      .catch((err) => showMsg('error', err.message))
+      .finally(() => setLoading(false));
   };
+
+
+  const handleDeleteGalleryItem = (id) => {
+    requestConfirm(
+      'Delete Gallery Media',
+      'Are you sure you want to permanently delete this media item from the gallery?',
+      () => {
+        const url = `${backendUrl || 'http://localhost:5000'}/api/admin/gallery/${id}`;
+        fetch(url, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error(`Deletion failed with status ${res.status}`);
+            return res.json();
+          })
+          .then(() => {
+            showMsg('success', 'Gallery item deleted!');
+            fetchGalleryItems();
+          })
+          .catch((err) => showMsg('error', err.message));
+      }
+    );
+  };
+
+
+
+  const handleGalleryFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    for (const file of files) {
+      if (file.size > 30 * 1024 * 1024) {
+        showMsg('error', `File ${file.name} is too large. Please select files under 30MB.`);
+        return;
+      }
+    }
+
+    try {
+      const readPromises = files.map((file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const fileType = file.type.startsWith('video/') ? 'video' : 'image';
+            resolve({
+              name: file.name,
+              media_url: reader.result,
+              media_type: fileType
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      });
+
+      const loadedFiles = await Promise.all(readPromises);
+      setSelectedGalleryFiles((prev) => [...prev, ...loadedFiles]);
+    } catch (err) {
+      console.error('Error reading files:', err);
+      showMsg('error', 'Failed to read selected files.');
+    }
+  };
+
+
+  const handleRemoveSelectedFile = (index) => {
+    setSelectedGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
 
   const handleDeleteEnquiry = (id) => {
-    if (!window.confirm('Are you sure you want to delete this enquiry?')) return;
-
-    fetch(`${backendUrl || 'http://localhost:5000'}/api/admin/enquiries/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Deletion failed');
-        return res.json();
-      })
-      .then(() => {
-        showMsg('success', 'Enquiry deleted successfully!');
-        fetchEnquiries();
-      })
-      .catch((err) => showMsg('error', err.message));
+    requestConfirm(
+      'Delete Enquiry',
+      'Are you sure you want to permanently delete this customer enquiry?',
+      () => {
+        fetch(`${backendUrl || 'http://localhost:5000'}/api/admin/enquiries/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Deletion failed');
+            return res.json();
+          })
+          .then(() => {
+            showMsg('success', 'Enquiry deleted successfully!');
+            fetchEnquiries();
+          })
+          .catch((err) => showMsg('error', err.message));
+      }
+    );
   };
+
 
   const showMsg = (type, text) => {
     setDashboardMessage({ type, text });
     setTimeout(() => setDashboardMessage({ type: '', text: '' }), 4000);
   };
+
+  const requestConfirm = (title, message, onConfirm) => {
+    setConfirmDialog({ isOpen: true, title, message, onConfirm });
+  };
+
 
   const exportToExcel = () => {
     if (enquiries.length === 0) {
@@ -604,6 +780,21 @@ export default function AdminDashboard({ backendUrl }) {
             }}
           >
             Manage Google Reviews ({reviews.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('gallery')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: activeTab === 'gallery' ? 'var(--accent-color)' : 'var(--text-primary)',
+              fontWeight: activeTab === 'gallery' ? 700 : 500,
+              fontSize: '16px',
+              padding: '12px 8px',
+              cursor: 'pointer',
+              borderBottom: activeTab === 'gallery' ? '3px solid var(--accent-color)' : 'none'
+            }}
+          >
+            Manage Gallery ({galleryItems.length})
           </button>
         </div>
 
@@ -1499,6 +1690,286 @@ export default function AdminDashboard({ backendUrl }) {
         </div>
       )}
 
+      {/* 5. GALLERY PANEL */}
+      {activeTab === 'gallery' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px' }} className="project-panel-grid">
+          {/* List of Gallery Items */}
+          <div>
+            <h3 style={{ fontSize: '20px', marginBottom: '16px', color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
+              Active Gallery Media ({galleryItems.length})
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+              {galleryItems.length === 0 ? (
+                <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>
+                  No media in the gallery database. Add one on the right side.
+                </div>
+              ) : (
+                galleryItems.map((item) => (
+                  <div key={item.id} className="glass-panel" style={{
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    position: 'relative'
+                  }}>
+                    <div style={{ height: '110px', width: '100%', borderRadius: '8px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                      {item.media_type === 'image' ? (
+                        <img src={item.media_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <video src={item.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                      )}
+                      <span style={{
+                        position: 'absolute',
+                        top: '6px',
+                        left: '6px',
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        background: 'rgba(10, 25, 47, 0.85)',
+                        color: 'var(--accent-color)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(234, 179, 8, 0.4)'
+                      }}>
+                        {item.media_type === 'image' ? 'PHOTO' : 'VIDEO'}
+                      </span>
+                    </div>
+
+                    <div style={{ flexGrow: 1 }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.title}>
+                        {item.title}
+                      </h4>
+                      <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '32px', lineHeight: '1.4' }}>
+                        {item.description || 'No description'}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteGalleryItem(item.id)}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        border: '1px solid #ef4444',
+                        color: '#ef4444',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        width: '100%'
+                      }}
+                    >
+                      <Trash2 size={12} />
+                      Delete Media
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Add Gallery Form */}
+          <div className="glass-panel" style={{ padding: '24px', height: 'fit-content' }}>
+            <h3 style={{ fontSize: '18px', marginBottom: '20px', color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Plus size={18} />
+              Add Gallery Item
+            </h3>
+            <form onSubmit={handleAddGalleryItem} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>Media Title</label>
+                <input
+                  type="text"
+                  value={newGalleryItem.title}
+                  onChange={(e) => setNewGalleryItem({ ...newGalleryItem, title: e.target.value })}
+                  placeholder="e.g. Modern duplex elevation (optional for file uploads)"
+                  required={galleryImageSourceType === 'url'}
+                />
+
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>Description</label>
+                <textarea
+                  value={newGalleryItem.description}
+                  onChange={(e) => setNewGalleryItem({ ...newGalleryItem, description: e.target.value })}
+                  placeholder="Short description..."
+                  rows={3}
+                  style={{ fontSize: '13px' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>Type</label>
+                  <select
+                    value={newGalleryItem.media_type}
+                    onChange={(e) => {
+                      setNewGalleryItem({ ...newGalleryItem, media_type: e.target.value, media_url: '' });
+                    }}
+                    required
+                  >
+                    <option value="image">Photo</option>
+                    <option value="video">Video</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' }}>
+                  Media Content Source
+                </label>
+                
+                {/* Source Selection Tabs */}
+                <div style={{
+                  display: 'flex',
+                  gap: '6px',
+                  marginBottom: '10px',
+                  background: 'rgba(0, 0, 0, 0.05)',
+                  padding: '4px',
+                  borderRadius: '8px',
+                  width: 'fit-content',
+                  border: '1px solid var(--card-border)'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGalleryImageSourceType('url');
+                      setNewGalleryItem({ ...newGalleryItem, media_url: '' });
+                    }}
+                    style={{
+                      background: galleryImageSourceType === 'url' ? 'var(--accent-color)' : 'none',
+                      color: galleryImageSourceType === 'url' ? '#0a192f' : 'var(--text-primary)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '5px 10px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Link / URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGalleryImageSourceType('file');
+                      setNewGalleryItem({ ...newGalleryItem, media_url: '' });
+                    }}
+                    style={{
+                      background: galleryImageSourceType === 'file' ? 'var(--accent-color)' : 'none',
+                      color: galleryImageSourceType === 'file' ? '#0a192f' : 'var(--text-primary)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '5px 10px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Upload File
+                  </button>
+                </div>
+
+                {galleryImageSourceType === 'url' ? (
+                  <input
+                    type="url"
+                    value={newGalleryItem.media_url}
+                    onChange={(e) => setNewGalleryItem({ ...newGalleryItem, media_url: e.target.value })}
+                    placeholder="https://..."
+                    required
+                    style={{ fontSize: '13px' }}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,video/*"
+                      onChange={handleGalleryFileChange}
+                      required={selectedGalleryFiles.length === 0}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        border: '1px dashed var(--card-border)',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        cursor: 'pointer',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    
+                    {selectedGalleryFiles.length > 0 && (
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                        gap: '10px',
+                        marginTop: '8px',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid var(--card-border)',
+                        borderRadius: '8px',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}>
+                        {selectedGalleryFiles.map((item, idx) => (
+                          <div key={idx} style={{
+                            position: 'relative',
+                            height: '80px',
+                            borderRadius: '6px',
+                            overflow: 'hidden',
+                            border: '1px solid var(--card-border)',
+                            background: '#000'
+                          }}>
+                            {item.media_type === 'image' ? (
+                              <img src={item.media_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <video src={item.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSelectedFile(idx)}
+                              style={{
+                                position: 'absolute',
+                                top: '2px',
+                                right: '2px',
+                                background: '#ef4444',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '18px',
+                                height: '18px',
+                                fontSize: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                zIndex: 10
+                              }}
+                              title="Remove"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                )}
+              </div>
+
+              <button type="submit" className="btn-primary" disabled={loading} style={{ justifyContent: 'center', marginTop: '10px' }}>
+                {loading ? 'Adding...' : 'Add to Gallery'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Embedded CSS for responsive elements */}
       <style>{`
         @media (max-width: 992px) {
@@ -1520,9 +1991,98 @@ export default function AdminDashboard({ backendUrl }) {
           }
           .project-panel-grid {
             grid-template-columns: 1fr !important;
-          }
         }
       `}</style>
+
+      {/* CUSTOM PREMIUM CONFIRMATION DIALOG */}
+      {confirmDialog.isOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0,
+          width: '100%', height: '100%',
+          background: 'rgba(2, 12, 27, 0.85)',
+          backdropFilter: 'blur(12px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          padding: '24px'
+        }}>
+          <div className="glass-panel" style={{
+            padding: '30px',
+            width: '100%',
+            maxWidth: '420px',
+            borderRadius: '16px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.1)',
+              color: '#ef4444',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto'
+            }}>
+              <AlertTriangle size={32} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '20px', fontFamily: 'Outfit, sans-serif', color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+                {confirmDialog.title}
+              </h3>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
+                {confirmDialog.message}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+              <button
+                onClick={() => setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null })}
+                style={{
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--card-border)',
+                  color: 'var(--text-primary)',
+                  padding: '11px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+                  setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null });
+                }}
+                style={{
+                  flex: 1,
+                  background: '#ef4444',
+                  border: 'none',
+                  color: '#fff',
+                  padding: '11px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

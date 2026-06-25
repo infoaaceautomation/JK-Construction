@@ -8,6 +8,7 @@ export default function Navbar({ theme, toggleTheme, currentTab, setCurrentTab }
     { id: 'home', label: 'Home' },
     { id: 'services', label: 'Services' },
     { id: 'projects', label: 'Projects' },
+    { id: 'gallery', label: 'Gallery' },
     { id: 'contact', label: 'Contact Us' },
     { id: 'admin', label: 'Admin' }
   ];
