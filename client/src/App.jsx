@@ -42,7 +42,7 @@ export default function App() {
     { id: 'brickwork', step: '02', title: 'Brickwork', desc: 'Stacking red clay bricks to build exterior and interior structural walls' },
     { id: 'slabcasting', step: '03', title: 'Slab Casting', desc: 'Pouring structural concrete slabs for floors and ceiling formwork' },
     { id: 'plaster', step: '04', title: 'Plastering', desc: 'Applying protective smooth cement plaster over brick structures' },
-    { id: 'finishing', step: '05', title: 'Finishing & Painting', desc: 'Installing window frames, painter ladders, and base coats of paint' },
+    { id: 'finishing', step: '05', title: 'Final Complete Finishing with Interior Work', desc: 'Installing window frames, painter ladders, and base coats of paint' },
     { id: 'completed', step: '06', title: 'Complete Villa', desc: 'Fully realized premium luxury villa with landscaping, paths, and modern lights' }
   ];
 
